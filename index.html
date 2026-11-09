@@ -3,20 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>النظام المحاسبي للذهب</title>
-    <!-- استدعاء Tailwind CSS -->
+    <title>Account Book</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ربط ملف التصميم -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-4 md:p-8 relative">
 
-    <div id="mainApp" class="w-full max-w-4xl mx-auto">
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginScreen" class="absolute inset-0 z-50 flex items-center justify-center bg-[#121212] px-4">
+        <div class="glass-panel p-8 rounded-xl w-full max-w-md border border-yellow-500/30 shadow-2xl">
+            <h2 class="text-3xl font-bold gold-primary mb-2 text-center"> Account Book </h2>
+            <p class="text-gray-400 text-center text-sm mb-6">برجاء تسجيل الدخول للوصول للدفاتر</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm mb-1 text-gray-300">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" dir="ltr" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1 text-gray-300">كلمة المرور</label>
+                    <input type="password" id="loginPassword" dir="ltr" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500">
+                </div>
+                <button onclick="login()" class="w-full gold-bg hover:bg-yellow-500 text-[#121212] py-3 rounded-lg font-bold mt-2 transition">تسجيل الدخول</button>
+                <p id="loginError" class="text-red-500 text-sm text-center mt-2 hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي (مخفي حتى يتم تسجيل الدخول) -->
+    <div id="mainApp" class="w-full max-w-4xl mx-auto hidden">
         <header class="mb-6 border-b border-gray-800 pb-4">
-            <h1 class="text-3xl font-bold gold-primary text-center mb-6"> Account Book </h1>
+            <div class="flex justify-between items-center mb-6">
+                <div class="w-20"></div> <!-- مسافة للموازنة -->
+                <h1 class="text-3xl font-bold gold-primary text-center"> Account Book </h1>
+                <button onclick="logout()" class="text-sm text-red-400 hover:text-red-300 bg-red-900/20 px-3 py-1 rounded border border-red-900/50 transition">تسجيل خروج</button>
+            </div>
             
             <div class="flex flex-wrap gap-2 justify-center">
-                <button onclick="switchTab('shopsTab')" id="btn-shopsTab" class="tab-btn tab-active px-6 py-2 rounded-lg">المحلات</button>
+                <button onclick="switchTab('shopsTab')" id="btn-shopsTab" class="tab-btn tab-active px-6 py-2 rounded-lg"> المحلات</button>
                 <button onclick="switchTab('merchantsTab')" id="btn-merchantsTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">التجار</button>
                 <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">الجرد</button>
             </div>
@@ -114,7 +138,7 @@
         <div id="merchantsTab" class="hidden">
             <div id="merchantsList" class="block">
                 <div class="glass-panel p-6 rounded-xl mb-6">
-                    <h2 class="text-xl font-bold mb-4 text-white">إضافة تاجر جديد</h2>
+                    <h2 class="text-xl font-bold mb-4 text-white">إضافة تاجر جديد (مورد)</h2>
                     <div class="flex gap-4">
                         <input type="text" id="newMerchantName" placeholder="اكتب اسم التاجر..." class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500">
                         <button onclick="addEntity('merchants', 'newMerchantName')" class="gold-bg px-6 py-2 rounded-lg font-bold">إضافة</button>
@@ -176,13 +200,13 @@
                                         <option value="18">عيار 18</option>
                                         <option value="21">عيار 21</option>
                                         <option value="custom_750">سبيكة مخصصة (تسليم 750)</option>
-                                        <option value="custom_775">سبيكة مخصصة (تسليم 775)</option>
+                                        <option value="custom_875">سبيكة مخصصة (تسليم 875)</option>
                                     </select>
                                 </div>
                                 
-                                <!-- مربع إدخال العيار المخصص (مخفي افتراضياً) -->
+                                <!-- مربع إدخال العيار المخصص -->
                                 <div id="merchantCustomKaratDiv" class="hidden mb-2">
-                                    <input type="number" id="merchantCustomKaratInput" placeholder="أدخل العيار (مثال: 999.9)" step="0.1" inputmode="decimal" class="w-full bg-gray-900 border border-blue-500 rounded-lg px-4 py-2 text-white">
+                                    <input type="number" id="merchantCustomKaratInput" placeholder="أدخل العيار (مثال: 999.9)" step="0.1" inputmode="decimal" class="w-full bg-gray-900 border border-blue-500 rounded-lg px-4 py-2 text-white focus:outline-none">
                                 </div>
 
                                 <input type="number" id="merchantDeductGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن المسدد / المرتجع" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
@@ -211,14 +235,14 @@
             </div>
         </div>
 
-        <!-- ================== قسم الجرد والملخص ================== -->
+        <!-- ================== قسم الجرد ================== -->
         <div id="inventoryTab" class="hidden">
             <div class="glass-panel p-6 rounded-xl mb-8 border-gray-600">
-                <h2 class="text-2xl font-bold gold-primary mb-6 text-center border-b border-gray-700 pb-4"> جرد الوزنة </h2> 
+                <h2 class="text-2xl font-bold gold-primary mb-6 text-center border-b border-gray-700 pb-4"> صافي الوزنة </h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-gray-800 p-5 rounded-lg border border-green-500/50 text-center">
-                        <h3 class="text-gray-400 text-sm mb-2"> إجمالي المحلات (اللي ليا) </h3>
+                        <h3 class="text-gray-400 text-sm mb-2">إجمالي المحلات (فلوسي بره)</h3>
                         <p class="font-bold text-white mb-2">ذهب: <span id="invTotalShopGold" class="text-xl text-green-400">0.00</span> ج</p>
                         <p class="font-bold text-white">نقدية: <span id="invTotalShopCash" class="text-xl text-green-400">0</span> ج.م</p>
                     </div>
@@ -229,7 +253,7 @@
                     </div>
                     <div class="bg-gray-900 p-5 rounded-lg border border-yellow-500 text-center shadow-lg relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-transparent"></div>
-                        <h3 class="text-yellow-500 font-bold mb-2 relative z-10">صافي الوزن (ليا - عليا)</h3>
+                        <h3 class="text-yellow-500 font-bold mb-2 relative z-10"> صافي الوزنة </h3>
                         <p class="font-bold text-white mb-2 relative z-10">ذهب: <span id="invNetGold" class="text-2xl">0.00</span> ج</p>
                         <p class="font-bold text-white relative z-10">نقدية: <span id="invNetCash" class="text-2xl">0</span> ج.م</p>
                         <p id="netStatus" class="text-xs mt-2 relative z-10"></p>

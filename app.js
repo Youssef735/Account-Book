@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, increment, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-// إعدادات مشروعك في فايربيز
 const firebaseConfig = {
     apiKey: "AIzaSyDjTDipyMX_cV-DSfR6H7KWGUbyHcMTVRw",
     authDomain: "work-accounts-71af6.firebaseapp.com",
@@ -14,18 +14,116 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app); 
 
 let dataState = { shops: [], merchants: [] };
 let currentId = { shops: null, merchants: null };
 let unsubTxs = { shops: null, merchants: null };
+let unsubShopsList = null;
+let unsubMerchantsList = null;
 
-// دالة إظهار وإخفاء العيار المخصص للسبيكة
+// ================= نظام تسجيل الدخول =================
+window.login = async function() {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    
+    if(!email || !pass) {
+        errorEl.innerText = "يرجى إدخال الإيميل والباسورد";
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        errorEl.classList.add('hidden');
+    } catch (error) {
+        errorEl.innerText = "بيانات الدخول غير صحيحة!";
+        errorEl.classList.remove('hidden');
+    }
+};
+
+window.logout = function() {
+    signOut(auth);
+};
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        loadDatabaseData();
+    } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+        unloadDatabaseData();
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+    }
+});
+
+// ================= دوال سحب البيانات =================
+function loadDatabaseData() {
+    ['shops', 'merchants'].forEach(type => {
+        const q = query(collection(db, type), orderBy("createdAt", "desc"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            dataState[type] = [];
+            const gridEl = document.getElementById(`${type}Grid`);
+            gridEl.innerHTML = '';
+            
+            if(snapshot.empty) {
+                gridEl.innerHTML = `<p class="text-gray-500 col-span-full text-center py-4">لا يوجد ${type === 'shops' ? 'محلات' : 'تجار'} مضافة.</p>`;
+            }
+
+            snapshot.forEach((document) => {
+                const item = { id: document.id, ...document.data() };
+                dataState[type].push(item);
+                
+                const card = window.document.createElement('div');
+                const isShop = type === 'shops';
+                card.className = `glass-panel p-5 rounded-xl cursor-pointer transition-colors border ${isShop ? 'border-gray-700 hover:border-yellow-400' : 'border-gray-700 hover:border-blue-400'}`;
+                card.onclick = () => window.openEntity(type, item.id);
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4 ${isShop ? 'text-white' : 'text-blue-200'}">${item.name}</h3>
+                    <div class="flex justify-between text-sm bg-gray-900/50 p-3 rounded">
+                        <span>الذهب: <span class="${isShop ? 'gold-primary' : 'text-blue-400'} font-bold text-lg">${item.goldBalance.toFixed(2)}</span></span>
+                        <span>النقدية: <span class="${isShop ? 'text-green-400' : 'text-orange-400'} font-bold text-lg">${item.cashBalance.toFixed(2)}</span></span>
+                    </div>
+                `;
+                gridEl.appendChild(card);
+            });
+
+            if (currentId[type]) {
+                const updatedItem = dataState[type].find(s => s.id === currentId[type]);
+                if (updatedItem) {
+                    document.getElementById(type === 'shops' ? 'currentShopGold' : 'currentMerchantGold').innerText = updatedItem.goldBalance.toFixed(2);
+                    document.getElementById(type === 'shops' ? 'currentShopCash' : 'currentMerchantCash').innerText = updatedItem.cashBalance.toFixed(2);
+                }
+            }
+            updateInventoryUI();
+        });
+
+        if (type === 'shops') unsubShopsList = unsubscribe;
+        else unsubMerchantsList = unsubscribe;
+    });
+}
+
+function unloadDatabaseData() {
+    if(unsubShopsList) unsubShopsList();
+    if(unsubMerchantsList) unsubMerchantsList();
+    if(unsubTxs.shops) unsubTxs.shops();
+    if(unsubTxs.merchants) unsubTxs.merchants();
+    dataState = { shops: [], merchants: [] };
+    currentId = { shops: null, merchants: null };
+}
+
+// ================= باقي دوال النظام =================
+
 window.toggleCustomKarat = function() {
     const select = document.getElementById('merchantDeductKaratSelect');
     const div = document.getElementById('merchantCustomKaratDiv');
-    if (select.value === 'custom_750' || select.value === 'custom_775') {
+    if (select && (select.value === 'custom_750' || select.value === 'custom_875')) {
         div.classList.remove('hidden');
-    } else {
+    } else if (div) {
         div.classList.add('hidden');
     }
 };
@@ -40,46 +138,6 @@ window.switchTab = function(tabId) {
     
     if(tabId === 'inventoryTab') updateInventoryUI();
 };
-
-['shops', 'merchants'].forEach(type => {
-    const q = query(collection(db, type), orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
-        dataState[type] = [];
-        const gridEl = document.getElementById(`${type}Grid`);
-        gridEl.innerHTML = '';
-        
-        if(snapshot.empty) {
-            gridEl.innerHTML = `<p class="text-gray-500 col-span-full text-center py-4">لا يوجد ${type === 'shops' ? 'محلات' : 'تجار'} مضافة.</p>`;
-        }
-
-        snapshot.forEach((document) => {
-            const item = { id: document.id, ...document.data() };
-            dataState[type].push(item);
-            
-            const card = window.document.createElement('div');
-            const isShop = type === 'shops';
-            card.className = `glass-panel p-5 rounded-xl cursor-pointer transition-colors border ${isShop ? 'border-gray-700 hover:border-yellow-400' : 'border-gray-700 hover:border-blue-400'}`;
-            card.onclick = () => window.openEntity(type, item.id);
-            card.innerHTML = `
-                <h3 class="text-xl font-bold mb-4 ${isShop ? 'text-white' : 'text-blue-200'}">${item.name}</h3>
-                <div class="flex justify-between text-sm bg-gray-900/50 p-3 rounded">
-                    <span>الذهب: <span class="${isShop ? 'gold-primary' : 'text-blue-400'} font-bold text-lg">${item.goldBalance.toFixed(2)}</span></span>
-                    <span>النقدية: <span class="${isShop ? 'text-green-400' : 'text-orange-400'} font-bold text-lg">${item.cashBalance.toFixed(2)}</span></span>
-                </div>
-            `;
-            gridEl.appendChild(card);
-        });
-
-        if (currentId[type]) {
-            const updatedItem = dataState[type].find(s => s.id === currentId[type]);
-            if (updatedItem) {
-                document.getElementById(type === 'shops' ? 'currentShopGold' : 'currentMerchantGold').innerText = updatedItem.goldBalance.toFixed(2);
-                document.getElementById(type === 'shops' ? 'currentShopCash' : 'currentMerchantCash').innerText = updatedItem.cashBalance.toFixed(2);
-            }
-        }
-        updateInventoryUI();
-    });
-});
 
 window.addEntity = async function(type, inputId) {
     const nameInput = document.getElementById(inputId);
@@ -203,11 +261,11 @@ window.processTransaction = async function(type, actionType) {
             if (k === '21') { 
                 karat = 21; 
                 calculatedGoldVal = goldVal * (875 / 750); 
-            } else if (k === 'custom_750' || k === 'custom_775') {
+            } else if (k === 'custom_750' || k === 'custom_875') {
                 const customKarat = parseFloat(document.getElementById('merchantCustomKaratInput').value);
                 if (!customKarat || customKarat <= 0) return alert('يرجى إدخال عيار السبيكة الصحيح');
                 karat = customKarat;
-                baseDenominator = k === 'custom_750' ? 750 : 775;
+                baseDenominator = k === 'custom_750' ? 750 : 875;
                 calculatedGoldVal = (goldVal * customKarat) / baseDenominator;
                 document.getElementById('merchantCustomKaratInput').value = ''; 
             }
