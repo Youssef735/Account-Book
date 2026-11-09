@@ -1,0 +1,28 @@
+body { 
+    background-color: #121212; 
+    color: #e0e0e0; 
+    font-family: system-ui, -apple-system, sans-serif; 
+}
+.gold-primary { color: #FFD700; }
+.gold-bg { background-color: #FFD700; color: #121212; }
+.gold-bg:hover { background-color: #e6c200; }
+.gold-border { border-color: #FFD700; }
+.glass-panel { 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 215, 0, 0.2); 
+    backdrop-filter: blur(10px); 
+}
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; margin: 0; 
+}
+::-webkit-scrollbar { height: 8px; width: 8px; }
+::-webkit-scrollbar-track { background: #1a1a1a; }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* تنسيق التبويبات النشطة */
+.tab-btn { transition: all 0.3s; }
+.tab-active { background-color: #FFD700; color: #121212; font-weight: bold; }
+.tab-inactive { background-color: #1f2937; color: #9ca3af; }
+.tab-inactive:hover { background-color: #374151; color: #e0e0e0; }

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>النظام المحاسبي للذهب</title>
+    <!-- استدعاء Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ربط ملف التصميم -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div id="mainApp" class="w-full max-w-4xl mx-auto">
+        <header class="mb-6 border-b border-gray-800 pb-4">
+            <h1 class="text-3xl font-bold gold-primary text-center mb-6"> Account Book </h1>
+            
+            <div class="flex flex-wrap gap-2 justify-center">
+                <button onclick="switchTab('shopsTab')" id="btn-shopsTab" class="tab-btn tab-active px-6 py-2 rounded-lg">المحلات</button>
+                <button onclick="switchTab('merchantsTab')" id="btn-merchantsTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">التجار</button>
+                <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">الجرد</button>
+            </div>
+        </header>
+
+        <!-- ================== قسم المحلات ================== -->
+        <div id="shopsTab" class="block">
+            <div id="shopsList" class="block">
+                <div class="glass-panel p-6 rounded-xl mb-6">
+                    <h2 class="text-xl font-bold mb-4 text-white">إضافة محل جديد</h2>
+                    <div class="flex gap-4">
+                        <input type="text" id="newShopName" placeholder="اكتب اسم المحل..." class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500">
+                        <button onclick="addEntity('shops', 'newShopName')" class="gold-bg px-6 py-2 rounded-lg font-bold">إضافة</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="shopsGrid">
+                    <p class="text-gray-500 col-span-full text-center py-4">جاري تحميل البيانات...</p>
+                </div>
+            </div>
+
+            <div id="shopDetails" class="hidden">
+                <button onclick="goBack('shops')" class="mb-6 text-gray-400 hover:text-yellow-400 flex items-center gap-2 transition">
+                    <span>&rarr; عودة لقائمة المحلات</span>
+                </button>
+                <div class="glass-panel p-6 rounded-xl mb-6">
+                    <h2 id="currentShopName" class="text-3xl font-bold gold-primary mb-6 text-center border-b border-gray-700 pb-4">اسم المحل</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-gray-800 p-4 rounded-lg text-center border gold-border shadow-lg">
+                            <p class="text-gray-400 mb-1">إجمالي الذهب (عليه)</p>
+                            <p class="text-2xl font-bold text-white"><span id="currentShopGold">0.00</span> <span class="text-sm gold-primary">ج (ع 18)</span></p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded-lg text-center border gold-border shadow-lg">
+                            <p class="text-gray-400 mb-1">إجمالي النقدية (عليه)</p>
+                            <p class="text-2xl font-bold text-white"><span id="currentShopCash">0</span> <span class="text-sm text-green-400">جنيه</span></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                            <h3 class="font-bold text-lg mb-4 text-green-400">➕ إضافة شغل (يُضاف عليه)</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="text-sm text-gray-300">النوع / الوزن (جرام ع 18)</label>
+                                        <select id="shopAddTypeSelect" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
+                                            <option value="new">شغل جديد</option>
+                                            <option value="return">مرتجع كسر (مرفوض)</option>
+                                        </select>
+                                    </div>
+                                    <input type="number" id="shopAddGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-gray-300">النقدية (حساب الشغل)</label>
+                                    <input type="number" id="shopAddCashInput" step="0.01" inputmode="decimal" placeholder="النقدية" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <button onclick="processTransaction('shops', 'add')" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold mt-2 transition">إضافة للحساب</button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                            <h3 class="font-bold text-lg mb-4 text-red-400">➖ تنزيل كسر ونقدية (دفع)</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="text-sm text-gray-300">الكسر المسدد (جرام)</label>
+                                        <select id="shopDeductKaratSelect" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
+                                            <option value="18">عيار 18</option>
+                                            <option value="21">عيار 21</option>
+                                        </select>
+                                    </div>
+                                    <input type="number" id="shopDeductGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-gray-300">الدفعة النقدية المسددة</label>
+                                    <input type="number" id="shopDeductCashInput" step="0.01" inputmode="decimal" placeholder="النقدية" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <button onclick="processTransaction('shops', 'deduct')" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold mt-2 transition">تنزيل من الحساب</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-lg border border-gray-700 overflow-hidden mt-6">
+                        <div class="bg-gray-800 p-4 border-b border-gray-700"><h3 class="font-bold text-lg text-white">📋 كشف حساب المحل</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-right text-gray-300 whitespace-nowrap">
+                                <thead class="text-xs text-gray-400 bg-gray-800/50">
+                                    <tr><th class="px-4 py-3">التاريخ والوقت</th><th class="px-4 py-3">العملية</th><th class="px-4 py-3">الذهب (ع 18)</th><th class="px-4 py-3">النقدية</th></tr>
+                                </thead>
+                                <tbody id="shopTransactionsTableBody" class="divide-y divide-gray-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================== قسم التجار ================== -->
+        <div id="merchantsTab" class="hidden">
+            <div id="merchantsList" class="block">
+                <div class="glass-panel p-6 rounded-xl mb-6">
+                    <h2 class="text-xl font-bold mb-4 text-white">إضافة تاجر جديد</h2>
+                    <div class="flex gap-4">
+                        <input type="text" id="newMerchantName" placeholder="اكتب اسم التاجر..." class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500">
+                        <button onclick="addEntity('merchants', 'newMerchantName')" class="gold-bg px-6 py-2 rounded-lg font-bold">إضافة</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="merchantsGrid"></div>
+            </div>
+
+            <div id="merchantDetails" class="hidden">
+                <button onclick="goBack('merchants')" class="mb-6 text-gray-400 hover:text-yellow-400 flex items-center gap-2 transition">
+                    <span>&rarr; عودة لقائمة التجار</span>
+                </button>
+                <div class="glass-panel p-6 rounded-xl mb-6 border-blue-900/50">
+                    <h2 id="currentMerchantName" class="text-3xl font-bold text-blue-400 mb-6 text-center border-b border-gray-700 pb-4">اسم التاجر</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-gray-800 p-4 rounded-lg text-center border border-blue-500/50 shadow-lg">
+                            <p class="text-gray-400 mb-1">إجمالي الذهب (له - عليا)</p>
+                            <p class="text-2xl font-bold text-white"><span id="currentMerchantGold">0.00</span> <span class="text-sm text-blue-400">ج (ع 18)</span></p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded-lg text-center border border-blue-500/50 shadow-lg">
+                            <p class="text-gray-400 mb-1">إجمالي النقدية (له - عليا)</p>
+                            <p class="text-2xl font-bold text-white"><span id="currentMerchantCash">0</span> <span class="text-sm text-blue-400">جنيه</span></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        
+                        <!-- إضافة (استلام شغل) -->
+                        <div class="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                            <h3 class="font-bold text-lg mb-4 text-blue-400">📥 استلام شغل (يزيد الدين عليا)</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm mb-1 text-gray-300">الوزن المستلم (جرام عيار 18)</label>
+                                    <input type="number" id="merchantAddGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm mb-1 text-gray-300">النقدية المطلوبة (مصنعية/حساب)</label>
+                                    <input type="number" id="merchantAddCashInput" step="0.01" inputmode="decimal" placeholder="النقدية" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <button onclick="processTransaction('merchants', 'add')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold mt-2 transition">إضافة للحساب (زيادة الدين)</button>
+                            </div>
+                        </div>
+
+                        <!-- تنزيل (تسديد كسر أو مرتجع شغل) -->
+                        <div class="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                            <h3 class="font-bold text-lg mb-4 text-orange-400">📤 تسديد / مرتجع (يخصم من عليا)</h3>
+                            <div class="space-y-4">
+                                
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-sm text-gray-300">نوع العملية</label>
+                                    <select id="merchantDeductTypeSelect" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
+                                        <option value="scrap">تسديد كسر</option>
+                                        <option value="return">مرتجع شغل</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-sm text-gray-300">العيار / التسليم</label>
+                                    <select id="merchantDeductKaratSelect" onchange="toggleCustomKarat()" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
+                                        <option value="18">عيار 18</option>
+                                        <option value="21">عيار 21</option>
+                                        <option value="custom_750">سبيكة مخصصة (تسليم 750)</option>
+                                        <option value="custom_775">سبيكة مخصصة (تسليم 775)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- مربع إدخال العيار المخصص (مخفي افتراضياً) -->
+                                <div id="merchantCustomKaratDiv" class="hidden mb-2">
+                                    <input type="number" id="merchantCustomKaratInput" placeholder="أدخل العيار (مثال: 999.9)" step="0.1" inputmode="decimal" class="w-full bg-gray-900 border border-blue-500 rounded-lg px-4 py-2 text-white">
+                                </div>
+
+                                <input type="number" id="merchantDeductGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن المسدد / المرتجع" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                
+                                <div class="mt-2">
+                                    <label class="block text-sm mb-1 text-gray-300">الدفعة النقدية المسددة للتاجر</label>
+                                    <input type="number" id="merchantDeductCashInput" step="0.01" inputmode="decimal" placeholder="النقدية" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
+                                </div>
+                                <button onclick="processTransaction('merchants', 'deduct')" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-bold mt-2 transition">تنزيل من الحساب (تقليل الدين)</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="bg-gray-900/50 rounded-lg border border-gray-700 overflow-hidden mt-6">
+                        <div class="bg-gray-800 p-4 border-b border-gray-700"><h3 class="font-bold text-lg text-white">📋 كشف حساب التاجر</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-right text-gray-300 whitespace-nowrap">
+                                <thead class="text-xs text-gray-400 bg-gray-800/50">
+                                    <tr><th class="px-4 py-3">التاريخ والوقت</th><th class="px-4 py-3">العملية</th><th class="px-4 py-3">الذهب (ع 18)</th><th class="px-4 py-3">النقدية</th></tr>
+                                </thead>
+                                <tbody id="merchantTransactionsTableBody" class="divide-y divide-gray-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================== قسم الجرد والملخص ================== -->
+        <div id="inventoryTab" class="hidden">
+            <div class="glass-panel p-6 rounded-xl mb-8 border-gray-600">
+                <h2 class="text-2xl font-bold gold-primary mb-6 text-center border-b border-gray-700 pb-4"> جرد الوزنة </h2> 
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-gray-800 p-5 rounded-lg border border-green-500/50 text-center">
+                        <h3 class="text-gray-400 text-sm mb-2"> إجمالي المحلات (اللي ليا) </h3>
+                        <p class="font-bold text-white mb-2">ذهب: <span id="invTotalShopGold" class="text-xl text-green-400">0.00</span> ج</p>
+                        <p class="font-bold text-white">نقدية: <span id="invTotalShopCash" class="text-xl text-green-400">0</span> ج.م</p>
+                    </div>
+                    <div class="bg-gray-800 p-5 rounded-lg border border-red-500/50 text-center">
+                        <h3 class="text-gray-400 text-sm mb-2">إجمالي التجار (ديون عليا)</h3>
+                        <p class="font-bold text-white mb-2">ذهب: <span id="invTotalMerchantGold" class="text-xl text-red-400">0.00</span> ج</p>
+                        <p class="font-bold text-white">نقدية: <span id="invTotalMerchantCash" class="text-xl text-red-400">0</span> ج.م</p>
+                    </div>
+                    <div class="bg-gray-900 p-5 rounded-lg border border-yellow-500 text-center shadow-lg relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-transparent"></div>
+                        <h3 class="text-yellow-500 font-bold mb-2 relative z-10">صافي الوزن (ليا - عليا)</h3>
+                        <p class="font-bold text-white mb-2 relative z-10">ذهب: <span id="invNetGold" class="text-2xl">0.00</span> ج</p>
+                        <p class="font-bold text-white relative z-10">نقدية: <span id="invNetCash" class="text-2xl">0</span> ج.م</p>
+                        <p id="netStatus" class="text-xs mt-2 relative z-10"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-gray-900/80 rounded-lg border border-gray-700 overflow-hidden">
+                    <div class="bg-gray-800 p-3 border-b border-gray-700"><h3 class="font-bold text-green-400">📋 جرد حسابات المحلات</h3></div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-sm text-right text-gray-300">
+                            <thead class="text-xs text-gray-400 bg-gray-800/50 sticky top-0">
+                                <tr><th class="px-4 py-2">المحل</th><th class="px-4 py-2">الذهب (عليه)</th><th class="px-4 py-2">النقدية (عليه)</th></tr>
+                            </thead>
+                            <tbody id="inventoryShopsBody" class="divide-y divide-gray-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-gray-900/80 rounded-lg border border-gray-700 overflow-hidden">
+                    <div class="bg-gray-800 p-3 border-b border-gray-700"><h3 class="font-bold text-red-400">📋 جرد حسابات التجار</h3></div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-sm text-right text-gray-300">
+                            <thead class="text-xs text-gray-400 bg-gray-800/50 sticky top-0">
+                                <tr><th class="px-4 py-2">التاجر</th><th class="px-4 py-2">الذهب (له)</th><th class="px-4 py-2">النقدية (له)</th></tr>
+                            </thead>
+                            <tbody id="inventoryMerchantsBody" class="divide-y divide-gray-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ربط ملف البرمجة -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
