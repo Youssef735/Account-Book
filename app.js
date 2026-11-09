@@ -116,7 +116,7 @@ function unloadDatabaseData() {
     currentId = { shops: null, merchants: null };
 }
 
-// ================= باقي دوال النظام =================
+// ================= تبديل الواجهات وإدارة الواجهة =================
 
 window.toggleCustomKarat = function() {
     const select = document.getElementById('merchantDeductKaratSelect');
@@ -125,6 +125,28 @@ window.toggleCustomKarat = function() {
         div.classList.remove('hidden');
     } else if (div) {
         div.classList.add('hidden');
+    }
+};
+
+window.toggleShopDeductMethod = function() {
+    const method = document.getElementById('shopDeductMethodSelect').value;
+    if (method === 'cash_to_gold') {
+        document.getElementById('shopDeductWeightDiv').classList.add('hidden');
+        document.getElementById('shopDeductCashForGoldDiv').classList.remove('hidden');
+    } else {
+        document.getElementById('shopDeductWeightDiv').classList.remove('hidden');
+        document.getElementById('shopDeductCashForGoldDiv').classList.add('hidden');
+    }
+};
+
+window.toggleMerchantDeductMethod = function() {
+    const method = document.getElementById('merchantDeductMethodSelect').value;
+    if (method === 'cash_to_gold') {
+        document.getElementById('merchantDeductWeightDiv').classList.add('hidden');
+        document.getElementById('merchantDeductCashForGoldDiv').classList.remove('hidden');
+    } else {
+        document.getElementById('merchantDeductWeightDiv').classList.remove('hidden');
+        document.getElementById('merchantDeductCashForGoldDiv').classList.add('hidden');
     }
 };
 
@@ -186,20 +208,31 @@ window.openEntity = function(type, id) {
             if (isShop) {
                 colorClass = isAdd ? 'text-green-400' : 'text-red-500';
                 rowBgClass = isAdd ? 'hover:bg-green-900/10' : 'hover:bg-red-900/10';
-                const subtype = isAdd ? (data.addType === 'return' ? '(مرتجع كسر)' : '(جديد)') : '';
-                typeText = isAdd ? `➕ إضافة شغل ${subtype}` : '➖ تنزيل كسر';
+                
+                if (isAdd) {
+                    const subtype = data.addType === 'return' ? '(مرتجع كسر)' : '(جديد)';
+                    typeText = `➕ إضافة شغل ${subtype}`;
+                } else {
+                    typeText = data.addType === 'cash_to_gold' ? '➖ تنزيل نقدية تُقيّم كذهب' : '➖ تنزيل كسر';
+                }
             } else {
                 colorClass = isAdd ? 'text-blue-400' : 'text-orange-400';
                 rowBgClass = isAdd ? 'hover:bg-blue-900/10' : 'hover:bg-orange-900/10';
+                
                 if (isAdd) {
                     typeText = `📥 استلام شغل`;
                 } else {
-                    typeText = data.addType === 'return' ? '📤 مرتجع شغل للتاجر' : '📤 تسديد كسر';
+                    if (data.addType === 'cash_to_gold') typeText = '📤 تسديد نقدية تُقيّم كذهب';
+                    else if (data.addType === 'return') typeText = '📤 مرتجع شغل للتاجر';
+                    else typeText = '📤 تسديد كسر';
                 }
             }
 
             let goldDisplay = data.goldAmount.toFixed(2);
-            if (data.karat && data.karat !== 18) {
+            
+            if (data.addType === 'cash_to_gold') {
+                goldDisplay = `${data.goldAmount.toFixed(2)} <br><span class="text-xs text-gray-500 font-normal mt-1 block">(${data.cashForGoldAmount}ج ÷ ${data.goldPrice21} لـ عيار 21)</span>`;
+            } else if (data.karat && data.karat !== 18) {
                 const baseText = data.baseDenominator ? ` مخصوم على ${data.baseDenominator}` : '';
                 goldDisplay = `${data.goldAmount.toFixed(2)} <br><span class="text-xs text-gray-500 font-normal mt-1 block">(من ${data.originalGoldAmount}ج عيار ${data.karat}${baseText})</span>`;
             }
@@ -226,51 +259,102 @@ window.goBack = function(type) {
     document.getElementById(type === 'shops' ? 'shopDetails' : 'merchantDetails').classList.add('hidden');
 };
 
+// ================= تنفيذ العمليات الحسابية =================
 window.processTransaction = async function(type, actionType) {
     if (!currentId[type]) return;
     const prefix = type === 'shops' ? 'shop' : 'merchant';
     
-    const goldInput = document.getElementById(actionType === 'add' ? `${prefix}AddGoldInput` : `${prefix}DeductGoldInput`);
+    // سحب النقدية العادية 
     const cashInput = document.getElementById(actionType === 'add' ? `${prefix}AddCashInput` : `${prefix}DeductCashInput`);
-
-    const goldVal = parseFloat(goldInput.value) || 0;
     const cashVal = parseFloat(cashInput.value) || 0;
+    cashInput.value = ''; 
 
-    if (goldVal === 0 && cashVal === 0) return alert('يرجى إدخال قيمة الذهب أو النقدية');
-
-    goldInput.value = ''; cashInput.value = '';
-
-    let calculatedGoldVal = goldVal;
+    let goldVal = 0;
+    let calculatedGoldVal = 0;
     let karat = 18;
     let addType = null;
     let baseDenominator = null; 
+    let cashForGoldAmount = 0;
+    let goldPrice21 = 0;
 
     if (type === 'shops') {
         if (actionType === 'add') {
+            const goldInput = document.getElementById('shopAddGoldInput');
+            goldVal = parseFloat(goldInput.value) || 0;
+            calculatedGoldVal = goldVal;
             addType = document.getElementById('shopAddTypeSelect').value;
+            goldInput.value = '';
         } else if (actionType === 'deduct') {
-            const k = document.getElementById('shopDeductKaratSelect').value;
-            if (k === '21') { karat = 21; calculatedGoldVal = goldVal * (7 / 6); }
+            const method = document.getElementById('shopDeductMethodSelect').value;
+            if (method === 'cash_to_gold') {
+                const cInput = document.getElementById('shopDeductCashForGoldInput');
+                const pInput = document.getElementById('shopDeductPrice21Input');
+                cashForGoldAmount = parseFloat(cInput.value) || 0;
+                goldPrice21 = parseFloat(pInput.value) || 0;
+                
+                if (cashForGoldAmount > 0 && goldPrice21 > 0) {
+                    goldVal = cashForGoldAmount / goldPrice21; // وزن 21
+                    karat = 21;
+                    calculatedGoldVal = goldVal * (875 / 750); // تحويل لـ 18
+                    addType = 'cash_to_gold';
+                }
+                cInput.value = ''; pInput.value = '';
+            } else {
+                const goldInput = document.getElementById('shopDeductGoldInput');
+                goldVal = parseFloat(goldInput.value) || 0;
+                calculatedGoldVal = goldVal;
+                const k = document.getElementById('shopDeductKaratSelect').value;
+                if (k === '21') { karat = 21; calculatedGoldVal = goldVal * (875 / 750); }
+                goldInput.value = '';
+            }
         }
     } 
     else if (type === 'merchants') {
-        if (actionType === 'deduct') {
-            addType = document.getElementById('merchantDeductTypeSelect').value; 
-            
-            const k = document.getElementById('merchantDeductKaratSelect').value;
-            if (k === '21') { 
-                karat = 21; 
-                calculatedGoldVal = goldVal * (875 / 750); 
-            } else if (k === 'custom_750' || k === 'custom_875') {
-                const customKarat = parseFloat(document.getElementById('merchantCustomKaratInput').value);
-                if (!customKarat || customKarat <= 0) return alert('يرجى إدخال عيار السبيكة الصحيح');
-                karat = customKarat;
-                baseDenominator = k === 'custom_750' ? 750 : 875;
-                calculatedGoldVal = (goldVal * customKarat) / baseDenominator;
-                document.getElementById('merchantCustomKaratInput').value = ''; 
+        if (actionType === 'add') {
+            const goldInput = document.getElementById('merchantAddGoldInput');
+            goldVal = parseFloat(goldInput.value) || 0;
+            calculatedGoldVal = goldVal;
+            goldInput.value = '';
+        } else if (actionType === 'deduct') {
+            const method = document.getElementById('merchantDeductMethodSelect').value;
+            if (method === 'cash_to_gold') {
+                const cInput = document.getElementById('merchantDeductCashForGoldInput');
+                const pInput = document.getElementById('merchantDeductPrice21Input');
+                cashForGoldAmount = parseFloat(cInput.value) || 0;
+                goldPrice21 = parseFloat(pInput.value) || 0;
+                
+                if (cashForGoldAmount > 0 && goldPrice21 > 0) {
+                    goldVal = cashForGoldAmount / goldPrice21;
+                    karat = 21;
+                    calculatedGoldVal = goldVal * (875 / 750);
+                    addType = 'cash_to_gold';
+                }
+                cInput.value = ''; pInput.value = '';
+            } else {
+                const goldInput = document.getElementById('merchantDeductGoldInput');
+                goldVal = parseFloat(goldInput.value) || 0;
+                addType = document.getElementById('merchantDeductTypeSelect').value; 
+                
+                const k = document.getElementById('merchantDeductKaratSelect').value;
+                if (k === '21') { 
+                    karat = 21; 
+                    calculatedGoldVal = goldVal * (875 / 750); 
+                } else if (k === 'custom_750' || k === 'custom_875') {
+                    const customKarat = parseFloat(document.getElementById('merchantCustomKaratInput').value);
+                    if (!customKarat || customKarat <= 0) return alert('يرجى إدخال عيار السبيكة الصحيح');
+                    karat = customKarat;
+                    baseDenominator = k === 'custom_750' ? 750 : 875;
+                    calculatedGoldVal = (goldVal * customKarat) / baseDenominator;
+                    document.getElementById('merchantCustomKaratInput').value = ''; 
+                } else {
+                    calculatedGoldVal = goldVal;
+                }
+                goldInput.value = '';
             }
         }
     }
+
+    if (goldVal === 0 && cashVal === 0) return alert('يرجى إدخال البيانات المطلوبة بشكل صحيح (إما نقدية أو ذهب)');
 
     const goldChange = actionType === 'add' ? calculatedGoldVal : -calculatedGoldVal;
     const cashChange = actionType === 'add' ? cashVal : -cashVal;
@@ -281,8 +365,16 @@ window.processTransaction = async function(type, actionType) {
     await Promise.all([
         updateDoc(docRef, { goldBalance: increment(goldChange), cashBalance: increment(cashChange) }),
         addDoc(txsRef, {
-            type: actionType, goldAmount: calculatedGoldVal, originalGoldAmount: goldVal,
-            karat: karat, baseDenominator: baseDenominator, addType: addType, cashAmount: cashVal, createdAt: serverTimestamp()
+            type: actionType, 
+            goldAmount: calculatedGoldVal, 
+            originalGoldAmount: goldVal,
+            karat: karat, 
+            baseDenominator: baseDenominator, 
+            addType: addType, 
+            cashAmount: cashVal, 
+            cashForGoldAmount: cashForGoldAmount || 0,
+            goldPrice21: goldPrice21 || 0,
+            createdAt: serverTimestamp()
         })
     ]);
 };
