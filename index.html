@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>النظام المحاسبي للذهب</title>
+    <title> Account Book </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +11,7 @@
 
     <div id="loginScreen" class="absolute inset-0 z-50 flex items-center justify-center bg-[#121212] px-4">
         <div class="glass-panel p-8 rounded-xl w-full max-w-md border border-yellow-500/30 shadow-2xl">
-            <h2 class="text-3xl font-bold gold-primary mb-2 text-center">النظام المحاسبي</h2>
+            <h2 class="text-3xl font-bold gold-primary mb-2 text-center"> Account Book </h2>
             <p class="text-gray-400 text-center text-sm mb-6">برجاء تسجيل الدخول للوصول للدفاتر</p>
             
             <div class="space-y-4">
@@ -33,14 +33,14 @@
         <header class="mb-6 border-b border-gray-800 pb-4">
             <div class="flex justify-between items-center mb-6">
                 <div class="w-20"></div>
-                <h1 class="text-3xl font-bold gold-primary text-center">النظام المحاسبي الشامل</h1>
+                <h1 class="text-3xl font-bold gold-primary text-center"> Account Book </h1>
                 <button onclick="logout()" class="text-sm text-red-400 hover:text-red-300 bg-red-900/20 px-3 py-1 rounded border border-red-900/50 transition">تسجيل خروج</button>
             </div>
             
             <div class="flex flex-wrap gap-2 justify-center">
                 <button onclick="switchTab('shopsTab')" id="btn-shopsTab" class="tab-btn tab-active px-6 py-2 rounded-lg">المحلات (اللي ليا)</button>
                 <button onclick="switchTab('merchantsTab')" id="btn-merchantsTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">التجار (اللي عليا)</button>
-                <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">الجرد والملخص</button>
+                <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">الجرد</button>
             </div>
         </header>
 
