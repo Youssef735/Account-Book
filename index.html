@@ -12,7 +12,7 @@
     <div id="loginScreen" class="absolute inset-0 z-50 flex items-center justify-center bg-[#121212] px-4">
         <div class="glass-panel p-8 rounded-xl w-full max-w-md border border-yellow-500/30 shadow-2xl">
             <h2 class="text-3xl font-bold gold-primary mb-2 text-center"> Account Book </h2>
-            <p class="text-gray-400 text-center text-sm mb-6">برجاء تسجيل الدخول للوصول للدفاتر</p>
+            <p class="text-gray-400 text-center text-sm mb-6"> Account Book Login </p>
             
             <div class="space-y-4">
                 <div>
@@ -33,14 +33,14 @@
         <header class="mb-6 border-b border-gray-800 pb-4">
             <div class="flex justify-between items-center mb-6">
                 <div class="w-20"></div>
-                <h1 class="text-3xl font-bold gold-primary text-center"> Account Book </h1>
+                <h1 class="text-3xl font-bold gold-primary text-center">  Account Book </h1>
                 <button onclick="logout()" class="text-sm text-red-400 hover:text-red-300 bg-red-900/20 px-3 py-1 rounded border border-red-900/50 transition">تسجيل خروج</button>
             </div>
             
             <div class="flex flex-wrap gap-2 justify-center">
                 <button onclick="switchTab('shopsTab')" id="btn-shopsTab" class="tab-btn tab-active px-6 py-2 rounded-lg">المحلات (اللي ليا)</button>
                 <button onclick="switchTab('merchantsTab')" id="btn-merchantsTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">التجار (اللي عليا)</button>
-                <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">الجرد</button>
+                <button onclick="switchTab('inventoryTab')" id="btn-inventoryTab" class="tab-btn tab-inactive px-6 py-2 rounded-lg">الجرد </button>
             </div>
         </header>
 
@@ -59,10 +59,25 @@
 
             <div id="shopDetails" class="hidden">
                 <button onclick="goBack('shops')" class="mb-6 text-gray-400 hover:text-yellow-400 flex items-center gap-2 transition">
-                    <span>&rarr; عودة لقائمة المحلات</span>
+                    <span>→ عودة لقائمة المحلات</span>
                 </button>
                 <div class="glass-panel p-6 rounded-xl mb-6">
-                    <h2 id="currentShopName" class="text-3xl font-bold gold-primary mb-6 text-center border-b border-gray-700 pb-4">اسم المحل</h2>
+                    
+                    <!-- أزرار التعديل والحذف للمحلات -->
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                        <h2 id="currentShopName" class="text-3xl font-bold gold-primary mb-4 md:mb-0">اسم المحل</h2>
+                        <div class="flex gap-4">
+                            <button onclick="editCurrentEntity('shops')" class="text-gray-400 hover:text-yellow-400 transition flex items-center gap-1" title="تعديل الاسم">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <span>تعديل</span>
+                            </button>
+                            <button onclick="deleteCurrentEntity('shops')" class="text-gray-400 hover:text-red-500 transition flex items-center gap-1" title="حذف المحل">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>حذف</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4 mb-8">
                         <div class="bg-gray-800 p-4 rounded-lg text-center border gold-border shadow-lg">
                             <p class="text-gray-400 mb-1">إجمالي الذهب (عليه)</p>
@@ -96,12 +111,10 @@
                             </div>
                         </div>
 
-                        <!-- تعديل التنزيل للمحلات -->
                         <div class="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
                             <h3 class="font-bold text-lg mb-4 text-red-400">➖ تنزيل كسر ونقدية (دفع)</h3>
                             <div class="space-y-4">
                                 
-                                <!-- طريقة السداد -->
                                 <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
                                     <label class="text-sm font-bold text-gray-300">طريقة سداد الذهب</label>
                                     <select id="shopDeductMethodSelect" onchange="toggleShopDeductMethod()" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
@@ -110,7 +123,6 @@
                                     </select>
                                 </div>
 
-                                <!-- إدخال وزن -->
                                 <div id="shopDeductWeightDiv" class="space-y-2 block">
                                     <div class="flex justify-between items-center mb-1">
                                         <label class="text-sm text-gray-300">العيار / الوزن</label>
@@ -122,13 +134,11 @@
                                     <input type="number" id="shopDeductGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن المسدد" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
                                 </div>
 
-                                <!-- إدخال نقدية كذهب -->
                                 <div id="shopDeductCashForGoldDiv" class="hidden space-y-2">
                                     <input type="number" id="shopDeductCashForGoldInput" step="0.01" inputmode="decimal" placeholder="المبلغ المدفوع ليُحسب كذهب" class="w-full bg-gray-900 border border-red-500 rounded-lg px-4 py-2 text-white focus:outline-none">
                                     <input type="number" id="shopDeductPrice21Input" step="0.01" inputmode="decimal" placeholder="سعر جرام 21 اليوم" class="w-full bg-gray-900 border border-red-500 rounded-lg px-4 py-2 text-white focus:outline-none">
                                 </div>
 
-                                <!-- نقدية عادية -->
                                 <div class="mt-4 pt-4 border-t border-gray-700">
                                     <label class="block text-sm mb-1 text-gray-300">الدفعة النقدية المسددة (من حساب النقدية)</label>
                                     <input type="number" id="shopDeductCashInput" step="0.01" inputmode="decimal" placeholder="النقدية" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
@@ -167,10 +177,25 @@
 
             <div id="merchantDetails" class="hidden">
                 <button onclick="goBack('merchants')" class="mb-6 text-gray-400 hover:text-yellow-400 flex items-center gap-2 transition">
-                    <span>&rarr; عودة لقائمة التجار</span>
+                    <span>→ عودة لقائمة التجار</span>
                 </button>
                 <div class="glass-panel p-6 rounded-xl mb-6 border-blue-900/50">
-                    <h2 id="currentMerchantName" class="text-3xl font-bold text-blue-400 mb-6 text-center border-b border-gray-700 pb-4">اسم التاجر</h2>
+                    
+                    <!-- أزرار التعديل والحذف للتجار -->
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                        <h2 id="currentMerchantName" class="text-3xl font-bold text-blue-400 mb-4 md:mb-0">اسم التاجر</h2>
+                        <div class="flex gap-4">
+                            <button onclick="editCurrentEntity('merchants')" class="text-gray-400 hover:text-blue-400 transition flex items-center gap-1" title="تعديل الاسم">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <span>تعديل</span>
+                            </button>
+                            <button onclick="deleteCurrentEntity('merchants')" class="text-gray-400 hover:text-red-500 transition flex items-center gap-1" title="حذف التاجر">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>حذف</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4 mb-8">
                         <div class="bg-gray-800 p-4 rounded-lg text-center border border-blue-500/50 shadow-lg">
                             <p class="text-gray-400 mb-1">إجمالي الذهب (له - عليا)</p>
@@ -198,12 +223,10 @@
                             </div>
                         </div>
 
-                        <!-- تعديل تنزيل التجار -->
                         <div class="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
                             <h3 class="font-bold text-lg mb-4 text-orange-400">📤 تسديد / مرتجع (يخصم من عليا)</h3>
                             <div class="space-y-4">
                                 
-                                <!-- طريقة السداد -->
                                 <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
                                     <label class="text-sm font-bold text-gray-300">طريقة تسديد الذهب</label>
                                     <select id="merchantDeductMethodSelect" onchange="toggleMerchantDeductMethod()" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none">
@@ -212,7 +235,6 @@
                                     </select>
                                 </div>
 
-                                <!-- إدخال وزن -->
                                 <div id="merchantDeductWeightDiv" class="space-y-2 block">
                                     <div class="flex justify-between items-center mb-2">
                                         <label class="text-sm text-gray-300">نوع العملية</label>
@@ -236,13 +258,11 @@
                                     <input type="number" id="merchantDeductGoldInput" step="0.01" inputmode="decimal" placeholder="الوزن المسدد / المرتجع" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">
                                 </div>
 
-                                <!-- إدخال نقدية كذهب -->
                                 <div id="merchantDeductCashForGoldDiv" class="hidden space-y-2">
                                     <input type="number" id="merchantDeductCashForGoldInput" step="0.01" inputmode="decimal" placeholder="المبلغ المدفوع ليُحسب كذهب" class="w-full bg-gray-900 border border-orange-500 rounded-lg px-4 py-2 text-white focus:outline-none">
                                     <input type="number" id="merchantDeductPrice21Input" step="0.01" inputmode="decimal" placeholder="سعر جرام 21 اليوم" class="w-full bg-gray-900 border border-orange-500 rounded-lg px-4 py-2 text-white focus:outline-none">
                                 </div>
 
-                                <!-- نقدية عادية -->
                                 <div class="mt-4 pt-4 border-t border-gray-700">
                                     <label class="block text-sm mb-1 text-gray-300">الدفعة النقدية المسددة (من حساب النقدية)</label>
                                     <input type="number" id="merchantDeductCashInput" step="0.01" inputmode="decimal" placeholder="النقدية" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none">

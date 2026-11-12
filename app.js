@@ -1,5 +1,6 @@
+// تحديث الإستدعاءات لإضافة أدوات الحذف (deleteDoc, getDocs)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, increment, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, increment, serverTimestamp, query, orderBy, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -116,7 +117,56 @@ function unloadDatabaseData() {
     currentId = { shops: null, merchants: null };
 }
 
-// ================= تبديل الواجهات وإدارة الواجهة =================
+// ================= تعديل وحذف المحلات والتجار =================
+window.editCurrentEntity = async function(type) {
+    if (!currentId[type]) return;
+    const item = dataState[type].find(s => s.id === currentId[type]);
+    if (!item) return;
+
+    const newName = prompt("أدخل الاسم الجديد:", item.name);
+    if (newName && newName.trim() !== "" && newName.trim() !== item.name) {
+        try {
+            const docRef = doc(db, type, currentId[type]);
+            await updateDoc(docRef, { name: newName.trim() });
+            document.getElementById(type === 'shops' ? 'currentShopName' : 'currentMerchantName').innerText = newName.trim();
+        } catch (error) {
+            alert("حدث خطأ أثناء تعديل الاسم");
+        }
+    }
+};
+
+window.deleteCurrentEntity = async function(type) {
+    if (!currentId[type]) return;
+    const item = dataState[type].find(s => s.id === currentId[type]);
+    if (!item) return;
+
+    const entityTypeAr = type === 'shops' ? 'المحل' : 'التاجر';
+    const confirmDelete = confirm(`هل أنت متأكد من حذف ${entityTypeAr} "${item.name}" بالكامل؟\nسيتم مسح جميع العمليات الخاصة به ولا يمكن التراجع عن هذه الخطوة!`);
+    
+    if (confirmDelete) {
+        try {
+            // 1. مسح جميع العمليات الأول عشان ميفضلش بيانات مخفية في الداتا بيز
+            const txsRef = collection(db, type, currentId[type], "transactions");
+            const txsSnapshot = await getDocs(txsRef);
+            const deletePromises = [];
+            txsSnapshot.forEach(docSnap => {
+                deletePromises.push(deleteDoc(docSnap.ref));
+            });
+            await Promise.all(deletePromises);
+
+            // 2. مسح المحل/التاجر نفسه من القائمة
+            const docRef = doc(db, type, currentId[type]);
+            await deleteDoc(docRef);
+
+            // 3. الرجوع للصفحة الرئيسية
+            goBack(type);
+        } catch (error) {
+            alert("حدث خطأ أثناء الحذف، تأكد من الاتصال بالإنترنت.");
+        }
+    }
+};
+
+// ================= باقي دوال النظام (الواجهة والتبديل) =================
 
 window.toggleCustomKarat = function() {
     const select = document.getElementById('merchantDeductKaratSelect');
@@ -264,7 +314,6 @@ window.processTransaction = async function(type, actionType) {
     if (!currentId[type]) return;
     const prefix = type === 'shops' ? 'shop' : 'merchant';
     
-    // سحب النقدية العادية 
     const cashInput = document.getElementById(actionType === 'add' ? `${prefix}AddCashInput` : `${prefix}DeductCashInput`);
     const cashVal = parseFloat(cashInput.value) || 0;
     cashInput.value = ''; 
@@ -293,9 +342,9 @@ window.processTransaction = async function(type, actionType) {
                 goldPrice21 = parseFloat(pInput.value) || 0;
                 
                 if (cashForGoldAmount > 0 && goldPrice21 > 0) {
-                    goldVal = cashForGoldAmount / goldPrice21; // وزن 21
+                    goldVal = cashForGoldAmount / goldPrice21;
                     karat = 21;
-                    calculatedGoldVal = goldVal * (875 / 750); // تحويل لـ 18
+                    calculatedGoldVal = goldVal * (875 / 750); 
                     addType = 'cash_to_gold';
                 }
                 cInput.value = ''; pInput.value = '';
